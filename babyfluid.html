@@ -127,6 +127,7 @@
       var sug10_con = document.fluidcalc.sug10_con.value * 1;
       var sug50_con = document.fluidcalc.sug50_con.value * 1;
       var nacl_con = document.fluidcalc.nacl_con.value * 1;
+      var nahco3_con = document.fluidcalc.nahco3_con.value * 1;
       var kcl_con = document.fluidcalc.kcl_con.value * 1;
       var ca_con = document.fluidcalc.ca_con.value * 1;
       var mvi_con = document.fluidcalc.mvi_con.value * 1;
@@ -135,6 +136,9 @@
       var vol = SC;
 
       //calculate vol of N,K etc:
+      // TODO how do we compute the mixture of NaCL and NaHCO3?
+      // Are the two always available? Do we need a checkbox to say when each is available?
+      // Is there a preference? i.e. use as much of one and then the rest?
       var n = roundNumber(N * W / nacl_con, 1);
       var k = roundNumber(K * W / kcl_con, 1);
       var m = roundNumber(Mg * W, 2);
@@ -349,20 +353,25 @@
           </tr>
           <tr>
             <td> Sugar: <input type=text name=S SIZE=5 maxlength=5 tabindex="3"> gm/kg/day </td>
-            <td> 10 % Dextrose: <input type=text name=sug10_con value="0.1"> gm/ml <br>
-              50 % Dextrose: <input type=text name=sug50_con value="0.5"> gm/ml </td>
-            <td> 10 % Dextrose: <input type=text name=sug10_ans readonly="read-only" class=op> ml <br>
-              50 % Dextrose: <input type=text name=sug50_ans readonly="read-only" class=op> ml </td>
+            <td>
+              10 % Dextrose: <input type=text name=sug10_con value="0.1"> gm/ml <br>
+              50 % Dextrose: <input type=text name=sug50_con value="0.5"> gm/ml
+            </td>
+            <td>
+              10 % Dextrose: <input type=text name=sug10_ans readonly="read-only" class=op> ml <br>
+              50 % Dextrose: <input type=text name=sug50_ans readonly="read-only" class=op> ml
+            </td>
           </tr>
           <tr>
             <td> Sodium: <input type=text name=N SIZE=5 maxlength=5 tabindex="4"> mEq/kg/day</td>
-            <td> 3 % NaCl: <input type=text name=nacl_con value="0.5"> mEq/ml</td>
-            <td> Add: <input type=text name=nacl_ans readonly="read-only" class=op> ml</td>
-          </tr>
-          <tr>
-            <td> Sodium: <input type=text name=N SIZE=5 maxlength=5 tabindex="4"> mEq/kg/day</td>
-            <td> 7.5 % NaHCO_3: <input type=text name=nacl_con value="1"> mEq/ml</td>
-            <td> Add: <input type=text name=nacl_ans readonly="read-only" class=op> ml</td>
+            <td>
+              3 % NaCl: <input type=text name=nacl_con value="0.5"> mEq/ml <br>
+              7.5 % NaHCO_3: <input type=text name=nahco3_con value="1"> mEq/ml
+            </td>
+            <td>
+              3 % NaCl: <input type=text name=nacl_ans readonly="read-only" class=op> ml <br>
+              7.5 % NaHCO_3: <input type=text name=nahco3_ans readonly="read-only" class=op> ml
+            </td>
           </tr>
           <tr>
             <td> Potassium: <input type=text name=K SIZE=5 maxlength=5 tabindex="5"> mEq/kg/day</td>
