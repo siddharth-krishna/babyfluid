@@ -1,0 +1,363 @@
+<head>
+  <style type="text/css">
+    input.op {
+      border: 1px solid;
+    }
+
+    body {
+      font-size: 14px;
+      font-family: 'Lucida Sans Unicode', 'Lucida Grande', sans-serif;
+    }
+
+    h1 {
+      text-align: center;
+      color: #039;
+    }
+
+    footer {
+      text-align: center;
+      color: #666;
+      font-size: 10px;
+    }
+
+    footer a {
+      color: #666;
+    }
+
+    #maintable {
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    #maintable td {
+      border: 1px solid #ccc;
+      padding: 4px;
+      padding-left: 10px;
+    }
+
+    #maintable td b {
+      color: #039;
+    }
+
+    #maintable th {
+      font-size: 16px;
+      font-weight: normal;
+      color: #039;
+      border: 1px solid #6678b1;
+      padding: 10px 8px;
+    }
+
+    #maintable {
+      border: 0px;
+    }
+  </style>
+
+  <SCRIPT LANGUAGE="JavaScript">
+
+    //This function taken from http://www.mediacollege.com/internet/javascript/number/round.html
+    function roundNumber(number, decimals) {
+      // Arguments: number to round, number of decimal places
+      var newnumber = new Number(number + '').toFixed(parseInt(decimals));
+      return parseFloat(newnumber);
+    }
+
+    function calc() {
+      var W = document.fluidcalc.W.value * 1;
+      var TFR = document.fluidcalc.TFR.value * 1;
+      var SC = document.fluidcalc.SC.value * 1;
+
+      var TF = TFR * W; //total fluid to be given
+
+      // First remove other fluid infusions from TF:
+      TF -= document.fluidcalc.In.value * 24;
+      TF -= document.fluidcalc.Sd.value * 24;
+      TF -= document.fluidcalc.Pg.value * 24;
+      TF -= document.fluidcalc.MS.value * 24;
+      TF -= document.fluidcalc.Ot.value * 24;
+
+      if (TF < 0) alert("Infusions exceed Total Fluid Requirement!");
+
+      // Lipids:
+      var L = document.fluidcalc.L.value * 1;
+      var hrs = document.fluidcalc.hrs.value * 1;
+
+      if (L > 0) {
+
+        if (hrs < 18) alert("Lipids must be given for a minimum of 18 hours!");
+
+        var L_conc;
+        if (document.getElementById('lipid_10').checked)
+          L_conc = .1;
+        else
+          L_conc = .2;
+
+        // Display lipid answers, and subtract from TF
+        document.fluidcalc.L_out.value = roundNumber(L * W / L_conc, 0);
+        TF -= L * W / L_conc;
+
+        // Add the multivitamins
+        var mvi_L = 0;
+        var mvi_L_con = document.fluidcalc.mvi_L_con.value;
+        if (document.fluidcalc.MVI_L.checked == true) {
+          mvi_L = roundNumber(TF * mvi_L_con / 50, 1);
+          document.fluidcalc.mvi_L_ans.value = mvi_L;
+        }
+
+        document.fluidcalc.L_rate.value = roundNumber((L * W / L_conc + mvi_L) / hrs, 1);
+      }
+
+      if (TF < 0) alert("Infusions + Lipids exceed Total Fluid Requirement!");
+
+      // Display total fluid to be given by drip:
+      document.fluidcalc.totalvol.value = roundNumber(TF, 0);
+
+      //correct the values of S,N,K for SC ml:
+      var S = document.fluidcalc.S.value * SC / (TF);
+      var N = document.fluidcalc.N.value * SC / (TF);
+      var K = document.fluidcalc.K.value * SC / (TF);
+      var Mg = document.fluidcalc.Mg.value * SC / (TF);
+      var AA = document.fluidcalc.AA.value * SC / (TF);
+
+      // Amino acids: cant give unless SC = TF!
+      if (AA > 0 && roundNumber(SC, 0) != roundNumber(TF, 0)) {
+        alert("Cannot give amino acids unless Syringe Capacity = Total Fluid to be given per day!");
+        return;
+      }
+
+      var sug10_con = document.fluidcalc.sug10_con.value * 1;
+      var sug50_con = document.fluidcalc.sug50_con.value * 1;
+      var nacl_con = document.fluidcalc.nacl_con.value * 1;
+      var kcl_con = document.fluidcalc.kcl_con.value * 1;
+      var ca_con = document.fluidcalc.ca_con.value * 1;
+      var mvi_con = document.fluidcalc.mvi_con.value * 1;
+
+      // Start filling the syringe:
+      var vol = SC;
+
+      //calculate vol of N,K etc:
+      var n = roundNumber(N * W / nacl_con, 1);
+      var k = roundNumber(K * W / kcl_con, 1);
+      var m = roundNumber(Mg * W, 2);
+      var aa = roundNumber(AA * W / .1, 0);
+      var mvi = 0, ca = 0, hep = 0;
+
+      if (document.fluidcalc.Ca.checked == true) {
+        ca = roundNumber(SC * ca_con / 50, 1);
+      }
+      if (document.fluidcalc.MVI.checked == true) {
+        mvi = roundNumber(SC * mvi_con / 50, 1);
+      }
+      //depending on type of vein, add heparin:
+      if (document.fluidcalc.VEIN[1].checked == true) {
+        hep = roundNumber(2.5 * SC / 50, 1);
+      }
+
+      vol -= n + k + m + aa + mvi + ca + hep;
+
+      // Trace elements is per SC ml, so just subtract that from vol here
+      vol -= document.fluidcalc.Tr.value * 1;
+
+      // assert vol > 0?
+      if (vol < 0) alert("Requirements too much for this volume!");
+
+      //now calculate the sugar solution:
+      var V = vol; // V is vol of sugar soln
+      var s = S * W;     // s is gms of sugar needed in V ml
+      var a, b, h;         // a mls of 1 %, b mls of 5%, h mls of H2O
+
+      if (s <= sug10_con * V) { //smaller conc than just 1 %
+        var s1 = Math.floor(s * 10) / 10, s2 = roundNumber(s - s1, 2);  //This is accuracy of measurement of 1% is 1ml, 5 % is .1 ml
+        //	alert("s :"+s+" s1: "+s1+" s2: "+s2);
+        a = roundNumber(s1 / sug10_con, 0); b = roundNumber(s2 / sug50_con, 1); h = roundNumber(V - a - b, 1);
+      } else if (s <= sug50_con * V) { //doable with 1% & 5%
+        var a1 = ((sug50_con * V) - (S * W)) / (sug50_con - sug10_con);  //again due to inaccurate measurement, solve assuming perfect measurement
+        a = Math.floor(a1);
+        //Now make up the rest using 5 % and H2O:
+        var ss = s - (a * sug10_con); V -= a;
+        b = roundNumber(ss / sug50_con, 1); h = roundNumber(V - b, 1);
+      } else {
+        alert("Sugar requirement too high to be made with the solutions at hand!");
+      }
+
+      // all flags:
+      var sug_con_col = "white";
+      var osm_col = "white";
+      var npcn_col = "white";
+
+      //calculate sugar perc and flag if wrong vein:
+      var sug_con = roundNumber(((a * sug10_con) + (b * sug50_con)) * 100 / SC, 2);
+
+      if (sug_con > 12.5 && document.fluidcalc.VEIN[0].checked == true) {
+        alert("Sugar concentration too high for Peripheral vein!!");
+        sug_con_col = "red";
+      }
+      if (sug_con > 25 && document.fluidcalc.VEIN[1].checked == true) {
+        alert("Sugar concentration too high for Central vein!!");
+        sug_con_col = "red";
+      }
+
+      // Display all the answers:
+      document.fluidcalc.nacl_ans.value = n;
+      document.fluidcalc.kcl_ans.value = k;
+      document.fluidcalc.mg_ans.value = m;
+      document.fluidcalc.ca_ans.value = ca;
+      document.fluidcalc.aa_ans.value = aa;
+      document.fluidcalc.mvi_ans.value = mvi;
+      document.fluidcalc.hep.value = hep;
+      document.fluidcalc.sug10_ans.value = a;
+      document.fluidcalc.sug50_ans.value = b;
+      document.fluidcalc.h2o.value = h;
+      document.fluidcalc.fin_sug_conc.value = sug_con;
+
+      // Display syringe flow rate:
+      document.fluidcalc.S_rate.value = roundNumber((TF) / 24, 1);
+
+      // Calculate total calories:
+      var cal = 3.4 * document.fluidcalc.S.value;
+
+      if (L > 0) {
+        if (document.getElementById('lipid_10').checked)
+          cal += L * 9;
+        else
+          cal += L * 10;
+      }
+      var npc = cal;
+
+      cal += 4 * document.fluidcalc.AA.value;
+      document.fluidcalc.cal_ans.value = roundNumber(cal, 0);
+
+      // Calculate osmolarity:
+      var osm = 55 * sug_con + 100 * (aa * .1 * 100 / SC)
+        + 340 * (n * nacl_con * 23 * 100 / (SC * 1000));
+
+      document.fluidcalc.osm_ans.value = roundNumber(osm, 0);
+
+      if (osm > 900 && document.fluidcalc.VEIN[0].checked == true) {
+        alert("Osmolarity too high for Peripheral vein!!");
+        osm_col = "red";
+      }
+
+
+      // Calculate NPC:N ratio
+      if (aa > 0) {
+        var npcn = npc / (document.fluidcalc.AA.value * 0.16);
+        document.fluidcalc.npcn_ans.value = roundNumber(npcn, 0);
+        if (npcn < 150 || npcn > 250) {
+          alert("NPC:N ratio should ideally be between 150 and 250!");
+          npcn_col = "red";
+        }
+      } else
+        document.fluidcalc.npcn_ans.value = 0;
+
+      // Display all flags:
+      document.fluidcalc.fin_sug_conc.style.backgroundColor = sug_con_col;
+      document.fluidcalc.osm_ans.style.backgroundColor = osm_col;
+      document.fluidcalc.npcn_ans.style.backgroundColor = npcn_col;
+
+    }
+  </script>
+</head>
+
+<body>
+  <h1> Baby Fluid Calculator </h1>
+
+  <center>(simplified version with Isolyte P)</center><br>
+
+  <form name=fluidcalc>
+    <center>
+
+      <table id="maintable">
+
+        <thead>
+          <tr>
+            <th> <b>Inputs: </b></th>
+            <th> <b>Concentration of Solutions: </b></th>
+            <th> <b>Final Recipe: </b></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td> Baby Weight: <input type=text name=W SIZE=5 maxlength=5 tabindex="1"> kg </td>
+            <td></td>
+            <td> Total fluid has:</td>
+          </tr>
+          <tr>
+            <td> Total Fluid Requirement: <input type=text name=TFR SIZE=5 maxlength=5 tabindex="2"> ml/kg/day </td>
+            <td></td>
+            <td>Calories: <input type=text name=cal_ans readonly="read-only" class=op> kcal/kg/day </td>
+          </tr>
+          <tr>
+            <td> <b>Other fluid infusions:</b></td>
+            <td></td>
+            <td>Osmolarity: <input type=text name=osm_ans readonly="read-only" class=op> mOsm/L</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td>NPC:N ratio: <input type=text name=npcn_ans readonly="read-only" class=op></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td>Sugar % of final soln: <input type=text name=fin_sug_conc readonly="read-only" class=op> %</td>
+          </tr>
+          <tr>
+            <td> Others: <input type=text name=Ot SIZE=5 maxlength=5 tabindex="2"> ml/hr </td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td> <b>In the syringe:</b></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>Amount of fluid to give per day: <input type=text name=totalvol size=5 readonly="read-only" class=op> ml
+            </td>
+            <td> At a rate of: <input type=text name=S_rate size=5 readonly="read-only" class=op> ml/hr</td>
+          </tr>
+          <tr>
+            <td> Sugar: <input type=text name=S SIZE=5 maxlength=5 tabindex="3"> gm/kg/day </td>
+            <td> 10 % Dextrose: <input type=text name=sug10_con value="0.1"> gm/ml <br>
+              50 % Dextrose: <input type=text name=sug50_con value="0.5"> gm/ml </td>
+            <td> 10 % Dextrose: <input type=text name=sug10_ans readonly="read-only" class=op> ml <br>
+              50 % Dextrose: <input type=text name=sug50_ans readonly="read-only" class=op> ml </td>
+          </tr>
+          <tr>
+            <td> Sodium: <input type=text name=N SIZE=5 maxlength=5 tabindex="4"> mEq/kg/day</td>
+            <td> 3 % NaCl: <input type=text name=nacl_con value="0.5"> mEq/ml</td>
+            <td> Add: <input type=text name=nacl_ans readonly="read-only" class=op> ml</td>
+          </tr>
+          <tr>
+            <td> Potassium: <input type=text name=K SIZE=5 maxlength=5 tabindex="5"> mEq/kg/day</td>
+            <td> 15 % Kcl: <input type=text name=kcl_con value="2"> mEq/ml</td>
+            <td> Add: <input type=text name=kcl_ans readonly="read-only" class=op> ml</td>
+          </tr>
+          <tr>
+            <td> Vein: <br> <input type=radio name=VEIN value="Peripheral" checked tabindex="9"> Peripheral <br> <input
+                type=radio name=VEIN value="Central"> Central</td>
+            <td></td>
+            <td> Heparin <input type=text name=hep readonly="read-only" class=op> ml</td>
+          </tr>
+          <tr>
+            <td> Syringe Capacity <input type=text name=SC value=50 tabindex="10"> ml </td>
+            <td></td>
+            <td>Sterile Water: <input type=text name=h2o readonly="read-only" class=op></td>
+          </tr>
+          <tr>
+            <td> <input type=button value="Calculate!" onclick="calc()" tabindex="11"> </td>
+            <td> <input type=reset name=reset value="Reset"> </td>
+            <td> </td>
+          </tr>
+        </tbody>
+      </table>
+
+    </center>
+  </form>
+
+  <footer>
+    Copyright 2020, Siddharth Krishna</a>.
+  </footer>
+
+</body>
