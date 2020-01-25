@@ -114,6 +114,7 @@
       //correct the values of S,N,K for SC ml:
       var S = document.fluidcalc.S.value * SC / (TF);
       var N = document.fluidcalc.N.value * SC / (TF);
+      var N2 = document.fluidcalc.N2.value * SC / (TF);
       var K = document.fluidcalc.K.value * SC / (TF);
       var Mg = document.fluidcalc.Mg.value * SC / (TF);
       var AA = document.fluidcalc.AA.value * SC / (TF);
@@ -136,10 +137,8 @@
       var vol = SC;
 
       //calculate vol of N,K etc:
-      // TODO how do we compute the mixture of NaCL and NaHCO3?
-      // Are the two always available? Do we need a checkbox to say when each is available?
-      // Is there a preference? i.e. use as much of one and then the rest?
       var n = roundNumber(N * W / nacl_con, 1);
+      var n2 = roundNumber(N2 * W / nahco3_con, 1);
       var k = roundNumber(K * W / kcl_con, 1);
       var m = roundNumber(Mg * W, 2);
       var aa = roundNumber(AA * W / .1, 0);
@@ -156,7 +155,7 @@
         hep = roundNumber(2.5 * SC / 50, 1);
       }
 
-      vol -= n + k + m + aa + mvi + ca + hep;
+      vol -= n + n2 + k + m + aa + mvi + ca + hep;
 
       // Trace elements is per SC ml, so just subtract that from vol here
       vol -= document.fluidcalc.Tr.value * 1;
@@ -202,6 +201,7 @@
 
       // Display all the answers:
       document.fluidcalc.nacl_ans.value = n;
+      document.fluidcalc.nahco3_ans.value = n2;
       document.fluidcalc.kcl_ans.value = k;
       document.fluidcalc.mg_ans.value = m;
       document.fluidcalc.ca_ans.value = ca;
@@ -231,6 +231,7 @@
       document.fluidcalc.cal_ans.value = roundNumber(cal, 0);
 
       // Calculate osmolarity:
+      // TODO how does nahco3 contribute to osmolarity?
       var osm = 55 * sug_con + 100 * (aa * .1 * 100 / SC)
         + 340 * (n * nacl_con * 23 * 100 / (SC * 1000));
 
@@ -365,11 +366,18 @@
           <tr>
             <td> Sodium: <input type=text name=N SIZE=5 maxlength=5 tabindex="4"> mEq/kg/day</td>
             <td>
-              3 % NaCl: <input type=text name=nacl_con value="0.5"> mEq/ml <br>
+              3 % NaCl: <input type=text name=nacl_con value="0.5"> mEq/ml
+            </td>
+            <td>
+              3 % NaCl: <input type=text name=nacl_ans readonly="read-only" class=op> ml
+            </td>
+          </tr>
+          <tr>
+            <td> Sodium: <input type=text name=N2 SIZE=5 maxlength=5 tabindex="4"> mEq/kg/day</td>
+            <td>
               7.5 % NaHCO_3: <input type=text name=nahco3_con value="1"> mEq/ml
             </td>
             <td>
-              3 % NaCl: <input type=text name=nacl_ans readonly="read-only" class=op> ml <br>
               7.5 % NaHCO_3: <input type=text name=nahco3_ans readonly="read-only" class=op> ml
             </td>
           </tr>
