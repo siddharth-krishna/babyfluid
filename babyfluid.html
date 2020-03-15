@@ -6,7 +6,7 @@
     }
 
     input.op {
-      border: 1px solid #f2f2f2;
+      border: 1px solid #bbb;
     }
 
     body {
@@ -58,6 +58,10 @@
 
     #maintable {
       border: 0px;
+    }
+
+    #maintable td:nth-child(3) {
+      background-color: #fff2f2;
     }
   </style>
 
@@ -291,9 +295,9 @@
 
         <thead>
           <tr>
-            <th> <b>Inputs: </b></th>
-            <th> <b>Concentration of Solutions: </b></th>
-            <th> <b>Final Recipe: </b></th>
+            <th> <b>Inputs </b></th>
+            <th> <b>Concentration of Solutions </b></th>
+            <th> <b>Final Recipe </b></th>
           </tr>
         </thead>
         <tbody>
@@ -428,31 +432,33 @@
           </tr>
           <tr>
             <td></td>
-            <td>Amount of fluid to give per day: <input type=text name=totalvol readonly="read-only" class=op> ml
-            </td>
-            <td> At a rate of:
-              <span style="float:right">
-                <input type=text name=S_rate readonly="read-only" class=op> ml/hr
-              </span>
+            <td></td>
+            <td>Per day: <input type=text name=totalvol readonly="read-only" class=op> ml @ <input type=text name=S_rate readonly="read-only" class=op> ml/hr
             </td>
           </tr>
           <tr>
-            <td> Sugar:
+            <td rowspan="2"> Sugar:
               <span style="float:right">
                 <input type=text name=S tabindex="3"> gm/kg/day
               </span>
             </td>
             <td>
-              10 % Dextrose: <input type=text name=sug10_con value="0.1"> gm/ml <br>
-              50 % Dextrose: <input type=text name=sug50_con value="0.5"> gm/ml
+              10 % Dextrose: <input type=text name=sug10_con value="0.1"> gm/ml
             </td>
             <td>
-              10 % Dextrose:
+              Add:
               <span style="float:right">
                 <input type=text name=sug10_ans readonly="read-only" class=op> ml
               </span>
-              <br>
-              50 % Dextrose:
+            </td>
+          </tr>
+          <tr>
+            <td style="display: none;"></td>
+            <td>
+              50 % Dextrose: <input type=text name=sug50_con value="0.5"> gm/ml
+            </td>
+            <td>
+              Add:
               <span style="float:right">
                 <input type=text name=sug50_ans readonly="read-only" class=op> ml
               </span>
@@ -461,7 +467,7 @@
           <tr>
             <td> Sodium:
               <span style="float:right">
-                <input type=text name=N tabindex="4"> mEq/kg/da
+                <input type=text name=N tabindex="4"> mEq/kg/day
               </span>
             </td>
             <td>
