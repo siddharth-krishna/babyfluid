@@ -1,8 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
+<meta charset="utf-8"/>
   <style type="text/css">
     input[type=text] {
       width: 4em;
       text-align: right;
+      padding: 2px;
     }
 
     input.op {
@@ -38,6 +42,7 @@
       padding: 8px;
       padding-left: 15px;
       padding-right: 15px;
+      min-width: 330px;
     }
 
     #maintable td b {
@@ -61,7 +66,8 @@
     }
 
     #maintable td:nth-child(3) {
-      background-color: #fff2f2;
+      background-color: #f2fff2;
+      min-width: 260px;
     }
   </style>
 
@@ -74,7 +80,25 @@
       return parseFloat(newnumber);
     }
 
+    function failWith(msg) {
+      var ops = document.getElementsByClassName("op")
+      for(var i = 0; i < ops.length; i++) {
+        ops[i].style.backgroundColor = "red";
+      }
+      alert(msg);
+    }
+
+    function resetOutputs() {
+      var ops = document.getElementsByClassName("op")
+      for(var i = 0; i < ops.length; i++) {
+        ops[i].value = "";
+        ops[i].style.backgroundColor = "white";
+      }
+    }
+
     function calc() {
+      resetOutputs();
+
       var W = document.fluidcalc.W.value * 1;
       var TFR = document.fluidcalc.TFR.value * 1;
       var SC = document.fluidcalc.SC.value * 1;
@@ -88,7 +112,10 @@
       TF -= document.fluidcalc.MS.value * 24;
       TF -= document.fluidcalc.Ot.value * 24;
 
-      if (TF < 0) alert("Infusions exceed Total Fluid Requirement!");
+      if (TF < 0) {
+        failWith("Other infusions exceed Total Fluid Requirement!");
+        return;
+      }
 
       // Lipids:
       var L = document.fluidcalc.L.value * 1;
@@ -96,7 +123,10 @@
 
       if (L > 0) {
 
-        if (hrs < 18) alert("Lipids must be given for a minimum of 18 hours!");
+        if (hrs < 18) {
+          failWith("Lipids must be given for a minimum of 18 hours!");
+          return;
+        }
 
         var L_conc;
         if (document.getElementById('lipid_10').checked)
@@ -119,7 +149,10 @@
         document.fluidcalc.L_rate.value = roundNumber((L * W / L_conc + mvi_L) / hrs, 1);
       }
 
-      if (TF < 0) alert("Infusions + Lipids exceed Total Fluid Requirement!");
+      if (TF < 0) {
+        failWith("Infusions + Lipids exceed Total Fluid Requirement!");
+        return;
+      }
 
       // Display total fluid to be given by drip:
       document.fluidcalc.totalvol.value = roundNumber(TF, 0);
@@ -127,22 +160,22 @@
       //correct the values of S,N,K for SC ml:
       var S = document.fluidcalc.S.value * SC / (TF);
       var N = document.fluidcalc.N.value * SC / (TF);
-      var N2 = document.fluidcalc.N2.value * SC / (TF);
+      var N2 = document.fluidcalc.N2.value * SC / (TF);  // TODO use symbolic solution and unify N/N2
       var K = document.fluidcalc.K.value * SC / (TF);
       var Mg = document.fluidcalc.Mg.value * SC / (TF);
       var AA = document.fluidcalc.AA.value * SC / (TF);
 
       // Amino acids: cant give unless SC = TF!
       if (AA > 0 && roundNumber(SC, 0) != roundNumber(TF, 0)) {
-        alert("Cannot give amino acids unless Syringe Capacity = Total Fluid to be given per day!");
+        failWith("Cannot give amino acids unless Syringe Capacity = Total Fluid to be given per day!");
         return;
       }
 
-      var sug10_con = document.fluidcalc.sug10_con.value * 1;
-      var sug50_con = document.fluidcalc.sug50_con.value * 1;
-      var nacl_con = document.fluidcalc.nacl_con.value * 1;
+      var sug10_con = document.fluidcalc.sug10_con.value * 1; // gm/ml
+      var sug50_con = document.fluidcalc.sug50_con.value * 1; // gm/ml
+      var nacl_con = document.fluidcalc.nacl_con.value * 1;   // mEq/ml
       var nahco3_con = document.fluidcalc.nahco3_con.value * 1;
-      var kcl_con = document.fluidcalc.kcl_con.value * 1;
+      var kcl_con = document.fluidcalc.kcl_con.value * 1;     // mEq/ml
       var ca_con = document.fluidcalc.ca_con.value * 1;
       var mvi_con = document.fluidcalc.mvi_con.value * 1;
 
@@ -174,7 +207,10 @@
       vol -= document.fluidcalc.Tr.value * 1;
 
       // assert vol > 0?
-      if (vol < 0) alert("Requirements too much for this volume!");
+      if (vol < 0) {
+        failWith("Requirements too much for this volume!");
+        return;
+      }
 
       //now calculate the sugar solution:
       var V = vol; // V is vol of sugar soln
@@ -192,7 +228,8 @@
         var ss = s - (a * sug10_con); V -= a;
         b = roundNumber(ss / sug50_con, 1); h = roundNumber(V - b, 1);
       } else {
-        alert("Sugar requirement too high to be made with the solutions at hand!");
+        failWith("Sugar requirement too high to be made with the solutions at hand!");
+        return;
       }
 
       // all flags:
@@ -290,9 +327,7 @@
 
   <form name=fluidcalc>
     <center>
-
       <table id="maintable">
-
         <thead>
           <tr>
             <th> <b>Inputs </b></th>
@@ -308,7 +343,12 @@
               </span>
             </td>
             <td></td>
-            <td> Total fluid has:</td>
+            <td>
+              Total fluid:
+              <span style="float:right">
+                <input type=text name=totalvol readonly="read-only" class=op> ml per day
+              </span>
+            </td>
           </tr>
           <tr>
             <td> Total Fluid Requirement:
@@ -374,7 +414,12 @@
               </span>
             </td>
             <td></td>
-            <td></td>
+            <td>
+              Drip rate:
+              <span style="float:right">
+                <input type=text name=S_rate readonly="read-only" class=op> ml/hr
+              </span>
+            </td>
           </tr>
           <tr>
             <td> Others:
@@ -431,9 +476,16 @@
             <td></td>
           </tr>
           <tr>
+            <td> Syringe Capacity
+              <span style="float:right">
+                <input type=text name=SC value=50 tabindex="10"> ml
+              </span>
+            </td>
             <td></td>
-            <td></td>
-            <td>Per day: <input type=text name=totalvol readonly="read-only" class=op> ml @ <input type=text name=S_rate readonly="read-only" class=op> ml/hr
+            <td>Sterile Water:
+              <span style="float:right">
+                <input type=text name=h2o readonly="read-only" class=op> ml
+              </span>
             </td>
           </tr>
           <tr>
@@ -502,7 +554,7 @@
                 <input type=text name=K tabindex="5"> mEq/kg/day
               </span>
             </td>
-            <td> 15 % Kcl: <input type=text name=kcl_con value="2"> mEq/ml</td>
+            <td> 15 % KCl: <input type=text name=kcl_con value="2"> mEq/ml</td>
             <td> Add:
               <span style="float:right">
                 <input type=text name=kcl_ans readonly="read-only" class=op> ml
@@ -578,22 +630,12 @@
             </td>
           </tr>
           <tr>
-            <td> Syringe Capacity
-              <span style="float:right">
-                <input type=text name=SC value=50 tabindex="10"> ml
-              </span>
+            <td>
+              <input type=button value="Calculate!" onclick="calc()" tabindex="11">
+              <input type=reset name=reset value="Reset" style="float: right;">
             </td>
             <td></td>
-            <td>Sterile Water:
-              <span style="float:right">
-                <input type=text name=h2o readonly="read-only" class=op> ml
-              </span>
-            </td>
-          </tr>
-          <tr>
-            <td> <input type=button value="Calculate!" onclick="calc()" tabindex="11"> </td>
-            <td> <input type=reset name=reset value="Reset"> </td>
-            <td> </td>
+            <td></td>
           </tr>
         </tbody>
       </table>
