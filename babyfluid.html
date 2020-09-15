@@ -191,6 +191,10 @@
       var mvi = 0, ca = 0, hep = 0;
 
       if (document.fluidcalc.Ca.checked == true) {
+        if (N2 > 0) {
+          failWith("Cannot give both Calcium and NaHCO3; will cause precipitation!");
+          return;
+        }
         ca = roundNumber(SC * ca_con / 50, 1);
       }
       if (document.fluidcalc.MVI.checked == true) {
