@@ -286,10 +286,11 @@
         + 340 * (n * nacl_con * 23 * 100 / (SC * 1000));
 
       if (n2 > 0) {
-        do {
-          var n2osm = parseFloat(prompt("Enter the osmolarity of " + n2 + " ml of NaHCO3"));
-        } while (isNaN(n2osm) || n2osm < 0);
-        osm += n2osm;
+        alert("Warning: osmolarity of NaHCO3 unknown. Ignoring NaHCO3 while calculating whether osmolarity is too high for peripheral vein.")
+        // do {
+        //   var n2osm = parseFloat(prompt("Enter the osmolarity of " + n2 + " ml of NaHCO3"));
+        // } while (isNaN(n2osm) || n2osm < 0);
+        // osm += n2osm;
       }
 
       document.fluidcalc.osm_ans.value = roundNumber(osm, 0);
